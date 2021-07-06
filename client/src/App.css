@@ -1,0 +1,33 @@
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(155, 155, 155, 0.7) transparent;
+  }
+  
+  /* Works on Chrome/Edge/Safari */
+  *::-webkit-scrollbar {
+    width: 5px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: rgba(155, 155, 155, 0.7);
+    border-radius: 20px;
+    border: transparent;
+  }
+
+  .active-library-chapter{
+      margin-left: 30%;
+  }
+
+  .active-chapter {
+    transform: translateX(0)
+  }
+
+  .star {
+    height: 2rem;
+    width: 2rem;
+    margin-right: 1px;
+  }
+
+  
