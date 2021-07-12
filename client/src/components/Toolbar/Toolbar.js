@@ -1,24 +1,22 @@
-import React, { useState } from 'react';
-import { AppBar, Toolbar, IconButton, InputBase, MenuItem } from '@material-ui/core';
+import React, { useEffect, useState } from 'react';
+import { AppBar, Toolbar, IconButton, InputBase, MenuItem, Grid, Backdrop, Modal, Fade } from '@material-ui/core';
 import { Link } from 'react-router-dom';
 import SignOut from '../../pages/Auth/SignOut';
 import SimpleMenu from './Menu';
 import useStyles from '../Styles/useStyles';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBookReader, faSearch, faSignInAlt, faUserCircle} from '@fortawesome/free-solid-svg-icons';
+import { GET_PUBLISH_ARTWORK, SEARCH_ARTWORKS } from '../../utils/graphql';
+import { useLazyQuery } from '@apollo/client';
 
 
-  export const Toolbars = ({open, setOpen, user = null}) => {
+  export const Toolbars = ({open, setOpen, user = null, searchQuery,setSearchQuery}) => {
   const classes = useStyles();
-
-  const [searchQuery,setSearchQuery] = useState('')
-    
-
   
   const [anchorEl, setAnchorEl] = useState(false);
 
   const handleOpen = (e) => {
-    setOpen(!open)
+    setOpen(!open);
   };
 
   const handleClose = () => {
@@ -55,20 +53,20 @@ import { faBookReader, faSearch, faSignInAlt, faUserCircle} from '@fortawesome/f
                       onChange={
                         (e) => setSearchQuery(e.target.value)
                       }
-                      onKeyDown={
-                        async (e) => {
-                         if(e.key === 'Enter'){
-                           if(searchQuery){
-                            //  await SearchData({
-                              //  variables: {
-                                //  searchQuery
-                              //  }
-                            //  })
-                             setSearchQuery('')
-                           }
-                         }
-                        }
-                      }
+                      // onKeyDown={
+                      //   async (e) => {
+                      //    if(e.key === 'Enter'){
+                      //      if(searchQuery){
+                      //        await SearchData({
+                      //          variables: {
+                      //            searchQuery
+                      //          }
+                      //        })
+                      //        setSearchQuery('')
+                      //      }
+                      //    }
+                      //   }
+                      // }
                     />
                   </div>
                 {user ? (

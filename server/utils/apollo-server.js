@@ -1,39 +1,29 @@
-const jwt = require('jsonwebtoken');
 const { ApolloServer } = require('apollo-server-express');
-const {pubSub, EVENTS} = require('../subscription')
+const {pubSub, EVENTS} = require('../subscription');
+const checkAuthorization = require('./checkAuthorization');
 
-const checkAuthorization = (token) => {
-  return new Promise(async (resolve, reject) => {
-    if(token === undefined) reject("Couldn't authenticate user");
-    const authUser = await jwt.verify(token, process.env.JWT_SECRET);
 
-    if (authUser) {
-      resolve(authUser);
-    } else {
-      reject("Couldn't authenticate user");
-    } 
-  });
-};
 
 
 module.exports = createApolloServer = (typeDefs, resolvers, models) => {
   return new ApolloServer({
     typeDefs,
     resolvers,
-    // uploads: false,
+    uploads: false,
     context: async ({ req, connection }) => {
       if (connection) {
         return connection.context;
       }
       let authUser = null;
-      // remove before deployment req.headers.authorization !!!hak
+      // req.headers.authorization &&  remove before deployment req.headers.authorization !!!hak
       if (req.headers.authorization && req.headers.authorization !== 'null') {
         const user = await checkAuthorization(req?.headers?.authorization);
         if (user) {
           authUser = user;
         }
       }
-      return Object.assign({authUser}, models, pubSub);
+      
+      return Object.assign({authUser}, {req}, models, pubSub);
     },
     subscriptions: {
       onConnect: async (connectionParams, webSocket, context) => {
@@ -46,7 +36,7 @@ module.exports = createApolloServer = (typeDefs, resolvers, models) => {
               isOnline: true,
             },
           });
-          return authUser
+          return {authUser}
         }
       },
       onDisconnect: async (webSocket, context) => {

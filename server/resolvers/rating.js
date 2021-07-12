@@ -66,7 +66,6 @@ exports.rating = {
             subscribe: withFilter(
                 () => pubSub.asyncIterator('CREATE_AND_DELETE_RATINGS'),
                 (payload, variables, context) => {
-                    console.log('payload', payload.publishRatings);
                     return payload.publishRatings.artwork.id === variables.artworkId
                 }
             )

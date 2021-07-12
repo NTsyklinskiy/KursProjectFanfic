@@ -173,6 +173,7 @@ const useStyles = makeStyles((theme) => {
           boxShadow: theme.shadows[5],
           padding: theme.spacing(1, 2, 2),
           borderRadius: '20px',
+          outline: 'none',
           overflow: 'hidden'
         },
         active: {
@@ -181,6 +182,11 @@ const useStyles = makeStyles((theme) => {
         },
         libraryActive: {
           marginLeft: '30%',
+        },
+        textarea: {
+          '& > textarea': {
+            height: '100%'
+          }
         }
       })});
     

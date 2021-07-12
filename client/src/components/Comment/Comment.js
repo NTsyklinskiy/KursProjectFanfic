@@ -34,7 +34,6 @@ const Comment = ({ comments, user }) => {
   return (
     <List className={classes.root}>
       {comments.length !== 0  ? comments.map(comment => {
-        // console.log("Comment", comment);
         return (
             <Fragment key={comment.id}>
             <ListItem alignItems="flex-start" style={{position: 'relative'}}>
@@ -44,7 +43,7 @@ const Comment = ({ comments, user }) => {
               <ListItemText
                 primary={
                   <Typography className={classes.fonts}>
-                    {comment?.author.name}
+                    {comment?.author?.name || 'DELETE USER'}
                   </Typography>
                 }
                 secondary={
@@ -55,10 +54,10 @@ const Comment = ({ comments, user }) => {
                       className={classes.inline}
                       color="textPrimary"
                     >
-                      {comment.author.email}
+                      {comment?.author?.email || 'DELETE USER'}
                     </Typography>
                     {` - ${comment.comment}`}
-                    {user.id === comment?.author?.id &&
+                    {user?.id === comment?.author?.id &&
                       <Button
                       style={{position:'absolute', top: 0, right: 0}}
                       onClick={async(e)=> {

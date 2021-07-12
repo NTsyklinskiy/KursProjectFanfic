@@ -35,7 +35,6 @@ exports.comment = {
                 {path: 'author'},
                 {path: 'chapter'}
             ]);
-            console.log(comment.author.id, comment.chapter.id);
             await User.findOneAndUpdate({ _id: comment.author.id }, { $pull: { comments: comment.id } });
             await Chapter.findOneAndUpdate({ _id: comment.chapter.id }, { $pull: { comments: comment.id } });
 
@@ -52,7 +51,6 @@ exports.comment = {
             subscribe: withFilter(
                 () => pubSub.asyncIterator("CREATE_COMMENT"),
                 (payload, variables, context) => {
-                    console.log('subscription payload',payload,'subscription variables', variables, 'context',context);
                     return payload.commentCreated.chapter.id === variables.chapterId
                 }
             )

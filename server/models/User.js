@@ -65,11 +65,19 @@ const userSchema = new Schema(
         ref: 'Comment',
       },
     ],
-    preference: 
+    isFirstLogin: {
+      type: Boolean,
+      default: true,
+    },
+    isMailConfirm:{
+      type: Boolean,
+      default: false,
+    },
+    preference:[
       {
-        type: Schema.Types.ObjectId,
-        ref: 'Preference'
-      },
+        type: String
+      }
+    ],
   },
   {
     timestamps: true,

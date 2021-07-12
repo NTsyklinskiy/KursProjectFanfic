@@ -14,7 +14,7 @@ const AddChapter = ({location,history,user}) => {
         title: '',
         text: '',
     });
-    const [image, setImage] = useState('');
+    const [image, setImage] = useState(null);
 
     const artworkId = location.pathname.split('/')[3];
 
@@ -23,9 +23,8 @@ const AddChapter = ({location,history,user}) => {
     const handlerBack = (e) => {
         history.goBack()
     }
-    
-    console.log(title, text, image, artworkId);
 
+    
     const handlerCreateChapter = async(e) => {
         try{
             e.preventDefault();
@@ -33,12 +32,11 @@ const AddChapter = ({location,history,user}) => {
                 input: {
                     title,
                     text,
-                    image,
                     artworkId 
-                }
+                },
+                file: image,
               },
               update(cache, {data: {createChapter}}){
-                console.log(cache);
                 const {getArtwork: {chapters}} = cache.readQuery({
                   query: GET_ARTWORK,
                   variables: {
@@ -46,7 +44,6 @@ const AddChapter = ({location,history,user}) => {
                   }
                 })
                 
-                console.log(chapters);
                 cache.writeQuery({
                   query: GET_ARTWORK,
                   variables: {
@@ -63,7 +60,7 @@ const AddChapter = ({location,history,user}) => {
               }
             })
         }catch(e) {
-            console.log(e);
+            console.error(e);
         }
     };
 

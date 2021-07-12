@@ -1,5 +1,4 @@
-import { useQuery } from '@apollo/client';
-import { Button, Card, CardActions, CardContent, CircularProgress, Grid, Typography} from '@material-ui/core';
+import { Button, Card, CardActions, CardContent, CircularProgress, Modal, Fade, Grid, Typography} from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { Link, withRouter, Route, Switch } from 'react-router-dom';
 import SignIn from '../../pages/Auth/SignIn';
@@ -10,27 +9,21 @@ import useStyles from '../Styles/useStyles';
 import Artwork  from './Artwork';
 import { Rating } from '../Rating/Rating';
 
-
 const Artworks = ({ArtworksPayload,history,user, refetch, open, setOpen}) => {
   const classes = useStyles();
-  // const {data: dataSearch, loading: loadingSearch, error: errorSearch} = search;
-  const {subscribeToMore: subscribeHome ,data: dataHome,error: errorHome,loading: loadingHome} = ArtworksPayload;
-  
-  const [datas, setData] = useState([])
-
-  // const data = ((!dataSearch?.searchArtworks && dataSearch?.searchArtworks ) || dataSearch?.searchArtworks.length) ?  dataSearch?.searchArtworks : dataHome?.getArtworks;
-
+  const {subscribeToMore: subscribeArtworks ,data: dataArtworks,error: errorArtworks,loading: loadingArtworks} = ArtworksPayload;  
+  const [data, setData] = useState([])
 
   useEffect(() => {
-    setData(dataHome?.getArtworks)
-  }, [dataHome])
+    setData(dataArtworks?.getArtworks)
+  }, [dataArtworks])
  
   const handleOpen = () => {
     setOpen(!open)
   }
   
   useEffect(()=> {
-    const unsubscribe = subscribeHome({
+    const unsubscribe = subscribeArtworks({
       document: GET_PUBLISH_ARTWORK,
       updateQuery: (prev, { subscriptionData }) => {
         if (!subscriptionData.data) return prev;
@@ -53,7 +46,7 @@ const Artworks = ({ArtworksPayload,history,user, refetch, open, setOpen}) => {
     return () => {
       unsubscribe();
     };
-  }, [subscribeHome])
+  }, [subscribeArtworks])
 
     return ( 
       <>
@@ -68,33 +61,30 @@ const Artworks = ({ArtworksPayload,history,user, refetch, open, setOpen}) => {
               <Route exact path={['/artwork/:id/chapter/:id','/artwork/:id']} render={() => <Artwork user={user} handleOpen={handleOpen} />} />
             </TransitionsModal>
           </Switch>
-            <Grid item style={{overflow: 'hidden'}} xs={12}>
-                Search panel
-              {/* {dataSearch?.searchArtworks &&  <Button onClick={() => {
-                setData(dataHome.getArtworks)
-              }}>X</Button>} */}
-             
-          </Grid>
+            
           <Grid item style={{overflow: 'hidden'}} xs={12}>
             <Grid style={{margin: 0}} container spacing={4}  alignItems='center' justify='center'>
-              {/* {(loadingHome || loadingSearch) && <CircularProgress style={{position: 'absolute', top: '50%', left: '50%', transform: 'translate()'}}/>} */}
-          { datas && datas.map((artwork, i)=> {
+          {loadingArtworks && <CircularProgress style={{position: 'absolute', top: '50%', left: '50%'}} color="primary" />}
+          { data && data.map((artwork)=> {
             return(
                 <Grid 
                   item 
                   key={artwork.id} 
-                  // style={{visibility: `${loadingHome || loadingSearch ? 'hidden': 'visible'}`, opacity: `${!loadingHome || !loadingSearch ? 1 : 0}`}}
                   >
                   <Card className={classes.rootArtwork}>
                     <CardContent>
-                      <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                      <Typography className={classes.titleArtwork} color="textSecondary" gutterBottom>
-                        Author {artwork.author.name}
-                      </Typography>
-                      <Typography className={classes.posArtwork} style={{position:'relative', width: '60%'}} color="textSecondary">                        
-                        <Rating artworks={dataHome} artwork={artwork} user={user} subscribeToMore={subscribeHome}/>
-                      </Typography>
-
+                      <div style={{display: 'flex', justifyContent: 'space-between', width: '100%', height: '60px'}}>
+                        <Typography className={classes.titleArtwork} color="textSecondary" gutterBottom>
+                          Author {artwork?.author?.name}
+                        </Typography>
+                        <Typography 
+                          className={classes.posArtwork} 
+                          style={{position:'relative', width: '60%', display: 'flex',justifyContent:'flex-end'}} 
+                          color="textSecondary"
+                          component='span'
+                        >                        
+                          <Rating artworks={dataArtworks} artwork={artwork} user={user} subscribeToMore={subscribeArtworks}/>
+                        </Typography>
                       </div>
                       <Typography variant="h5" component="h2">
                         {artwork.name}
@@ -116,10 +106,10 @@ const Artworks = ({ArtworksPayload,history,user, refetch, open, setOpen}) => {
                     </CardActions>
                   </Card>
                 </Grid>
-
             )
             })
           }
+          
           </Grid>
         </Grid>
       </>

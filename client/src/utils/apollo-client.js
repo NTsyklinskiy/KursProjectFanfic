@@ -1,8 +1,7 @@
-import { ApolloClient, ApolloLink, Observable, split, InMemoryCache, HttpLink } from '@apollo/client';
+import { ApolloClient, ApolloLink, Observable, split, InMemoryCache } from '@apollo/client';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { onError } from '@apollo/client/link/error';
 import { WebSocketLink } from '@apollo/client/link/ws';
-// import { HttpLink } from '@apollo/client/core';
 import { createUploadLink } from 'apollo-upload-client';
 
 
@@ -59,26 +58,13 @@ export const createApolloClient = (apiUrl, websocketApiUrl) => {
   const authLink = createAuthLink();
 
   const uploadLink = createUploadLink({ 
-    credentials: 'same-origin',
     uri: apiUrl,
-    timeout: 60000,
-    fetchOptions: {
-      method: 'POST',
-    },
-    headers: {
-      "keep-alive": "true"
-    } 
-});
-  // const uploadLink = new HttpLink({
-    // uri: apiUrl,
-    // timeout: 120000,
-  // })
-
+  })
+  
   const authToken = localStorage.getItem('token');
   const wsLink = new WebSocketLink({
     uri: websocketApiUrl,
     options: {
-      // timeout: 60000,
       reconnect: true,
       connectionParams: {
         authorization: authToken,

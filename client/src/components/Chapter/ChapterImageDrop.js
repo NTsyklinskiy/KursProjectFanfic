@@ -13,6 +13,7 @@ const DropzoneDialogExample = ({image, setImage}) => {
         })
     }
     const handleSave =(files) => {
+        
         setImage(files[0]);
         setState({
             open: false

@@ -17,11 +17,19 @@ exports.ChapterSchema = gql`
     input CreateChapterInput{
         title: String
         text: String
-        image: Upload
-        imagePublicId: String
         artworkId: ID!   
     }
-
+    input UpdateChapterInput {
+        imagePublicId: String
+        title: String
+        text: String
+        chapterId: ID!
+    }
+    input DeleteChapterInput {
+        imagePublicId: String
+        chapterId: ID!
+    }
+    
     type ChapterPayload {
         id: ID!
         title: String

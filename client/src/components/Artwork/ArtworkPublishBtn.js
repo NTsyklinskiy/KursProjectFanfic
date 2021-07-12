@@ -4,14 +4,17 @@ import React from 'react'
 import {Link} from 'react-router-dom'
 import { ARTWORK_PUBLISH,GET_ALL_ARTWORKS,GET_ARTWORK } from '../../utils/graphql';
 
-export const ArtworkPublishBtn = ({handleOpen,artworkId, isPublic}) => {
+export const ArtworkPublishBtn = ({handleOpen, artwork : {isPublic, chapters,id: artworkId}}) => {
     const [PublishArtwork] = useMutation(ARTWORK_PUBLISH)
     return (
         !isPublic ? 
+            (
+            <>
             <Button
                 component={Link}
                 type='submit'
                 color='primary'
+                disabled={!chapters.length}
                 to={'/'}
                 onClick={async() => {
                     handleOpen()
@@ -37,6 +40,9 @@ export const ArtworkPublishBtn = ({handleOpen,artworkId, isPublic}) => {
             }}>
                 Publish
             </Button>
+            {!chapters.length && <span>Your need add chapter</span>}
+            </>
+            )
         :   <Button
                 component={Link}
                 type='submit'

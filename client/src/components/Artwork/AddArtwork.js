@@ -6,21 +6,21 @@ import { withRouter } from 'react-router';
 import useForm from '../../hooks/useForm';
 import { CREATE_ARTWORK, GET_AUTH_USER, GET_TAGS } from '../../utils/graphql';
 
-const AddArtwork = ({history,user, handleOpen}) => {
+const AddArtwork = ({history, user, usersId, handleOpen}) => {
     const [CreateArtwork,{loading}] = useMutation(CREATE_ARTWORK)
     const [tags, setTags] = useState([])
     const {inputs,handleChange} = useForm({
         name: '',
         discription: '',
         fandom: '',
+        authorId: user?.id 
     })
 
     const {data, loading: loadingTags, error} = useQuery(GET_TAGS)
 
-    console.log(data);
 
    
-    const {name ,discription ,fandom} = inputs;
+    const {name ,discription ,fandom, authorId} = inputs;
 
     const handlerCreateArtwork = async(e) => {
         try{
@@ -31,7 +31,7 @@ const AddArtwork = ({history,user, handleOpen}) => {
                   discription,
                   fandom,
                   tags,
-                  authorId: user?.id 
+                  authorId
                 }
               },
               update(cache, {data: {createArtwork}}){
@@ -51,12 +51,11 @@ const AddArtwork = ({history,user, handleOpen}) => {
               }
             })
         }catch(e) {
-            console.log(e);
+            console.error(e);
         }
     }
 
     const dataTags = data?.getTags ? [...new Set(data?.getTags.tags)] : [];
-    console.log(tags);
     return (
         <Box style={{position: 'relative'}}>
             <Button
@@ -106,8 +105,27 @@ const AddArtwork = ({history,user, handleOpen}) => {
                   </Select>
                 </FormControl>
                 </Box>
+                {user.role==='admin' && (
+                  <FormControl style={{width: '100%'}}>
+                  <InputLabel htmlFor="fandom-native">Users</InputLabel>
+                  <Select
+                    native
+                    required
+                    value={inputs.authorId}
+                    onChange={handleChange}
+                    inputProps={{
+                      name: 'authorId',
+                      id: 'authorId-native',
+                    }}
+                  >
+                    <option aria-label="None" value="" />
+                    {usersId.map((userId) => {
+                      return <option key={userId} value={userId}>{userId}</option> 
+                    })}
+                  </Select>
+                </FormControl>
+                )}
                <Box style={{width: '100%'}}>
-               
                <Autocomplete
                 multiple
                 id="tags-filled"
@@ -131,7 +149,7 @@ const AddArtwork = ({history,user, handleOpen}) => {
               />
                 </Box>
                 <FormControl>
-                  <InputLabel htmlFor="component-helper">Discription</InputLabel>
+                  <InputLabel htmlFor="component-helper">Description</InputLabel>
                   <Input
                     id="component-helper"
                     name="discription"

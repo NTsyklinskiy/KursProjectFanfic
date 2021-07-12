@@ -62,7 +62,6 @@ export const AddComment = ({chapter,user}) => {
                         }
                       },
                       update(cache, {data: {createComment}}) {
-                        console.log(createComment);
                         // const {getComments} = cache.readQuery({
                         //   query: GET_COMMENTS,
                         //   variables: {

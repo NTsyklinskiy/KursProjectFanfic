@@ -6,6 +6,7 @@ const commentSchema = new Schema(
         comment: {
             type: String,
             required: true,
+            text: true
         },
         chapter: {
             type: Schema.Types.ObjectId,

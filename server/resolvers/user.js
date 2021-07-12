@@ -1,23 +1,25 @@
 const bcrypt = require('bcryptjs')
 const { withFilter } = require('apollo-server');
-
 const {pubSub, EVENTS} = require('../subscription');
 const generateToken = require('../utils/generateToken');
-
+const sendEmail = require('../utils/email');
+const checkAuthorization = require('../utils/checkAuthorization');
 
 exports.user = {
   Query: {
-    allUsers: async (parent, args, {authUser, User}, info) => {
+    allUsers: async (parent, args, {authUser, User}) => {
        const artworks = await User.find().populate([
           {path: 'artworks'},
+          {path: 'likes'},
+          {path: 'coments'},
           {
            path: 'ratings',
            populate: ['user', 'artwork']
-          }
+          },
         ]);
        return artworks
     },
-    getAuthUser: async (root, args, { authUser, User }) => {
+    getAuthUser: async (root, args, {authUser, User }) => {
       if (!authUser) return null;
       const user = await User.findOneAndUpdate({ email: authUser.email }, { isOnline: true, lastLoginAt:Date.now() })
       .populate([
@@ -31,14 +33,60 @@ exports.user = {
         { path: 'likes', populate: { path: 'user' } },
         { path: 'comments', populate: { path: 'chapters' } },
       ]);
-      console.log(user);
-      if(!user.active) return null;
+      if(!user) {
+        throw new Error('This user does not exist')
+      }
+      if(user.role !== 'admin'){
+        if(!user.active) {
+          throw new Error('you are banned')
+        }
+      }
       return user;
     },
+    isConfirmUserMail: async (root, {token}, { authUser, User }) => {
+      const confirmUser = await checkAuthorization(token);
+    if (!confirmUser) {
+      return {
+        isConfirm: false
+      };
+    }
+
+    await User.findOneAndUpdate({ _id: confirmUser.id }, { isMailConfirm: true });
+
+    return {
+      isConfirm: true
+    };
+    }
     
   },
   Mutation: {
-    signup: async (parent,{ userInput:{email,password,name}}, {authUser, User}, info) => {
+    firstLogin:async (parent,{preference = []}, {authUser, User}) => {
+      if(!preference.length){
+        throw new Error('You must choose your preferences')
+      }
+      await User.findOneAndUpdate({ _id: authUser.id }, { $push: { preference} });
+      await User.findOneAndUpdate({ _id: authUser.id }, { isFirstLogin: false });
+      return { message: 'Thank You'}
+    },
+    updatePrefence: async(parent,{preference = []}, {authUser, User}) => {
+      if(!preference.length){
+        throw new Error('You must choose your preferences')
+      }
+      const updatedUser = await User.findOneAndUpdate({ _id: authUser.id }, { preference }, { new: true })
+      .populate([
+        {
+          path: 'artworks',
+          populate: [
+            { path: 'chapters' , populate: [{ path: 'likes'} ,{ path: 'comments'}]},
+            { path: 'ratings' }
+          ]
+        },
+        { path: 'likes', populate: { path: 'user' } },
+        { path: 'comments', populate: { path: 'chapters' } },
+      ]);
+      return updatedUser
+    },
+    signup: async (parent,{ userInput:{email,password,name}}, {req,authUser, User}) => {
       const existingUser = await User.findOne({ email });
       if (existingUser) {
         const error = new Error('User exists already!');
@@ -47,25 +95,36 @@ exports.user = {
       const hashedPw = await bcrypt.hash(password, 12);
       
       const user = new User({
-        email: email,
-        name: name,
+        email,
+        name,
         password: hashedPw,
       });
 
       const createdUser = await user.save();
       
       const token = generateToken(createdUser, process.env.JWT_SECRET)
+
+      const createUrl = async (token, id) => {
+        const URLDeploy = `${req.protocol}://${req.get('host')}/confirm/${token}`;
+        return URLDeploy
+      }
+
+      await sendEmail({
+        email: user.email,
+        subject: 'Confirm Email',
+        url: await createUrl(token, createdUser.id),
+      } )
+
       return {
-        token
+        message: 'An activation email has been sent to your email'
       }
     },
-    signin: async (parent, {email, password} , {authUser,User}, info) => {
+    signin: async (parent, {email, password} , {authUser,User}) => {
       if(!email || !password) {
         throw new Error('Please provide email and password!');
       }
 
       const user = await User.findOne({email}).select('+password')
-
       if(!user){
         error = new Error('Incorrect email')
         error.code = 401;
@@ -77,12 +136,18 @@ exports.user = {
         throw new Error('Incorrect password')
       }
 
+      if(user.role !== 'admin'){
+        if(!user.isMailConfirm) {
+          throw new Error('You need to confirm your email')
+        }
+      }
+
       const token = generateToken(user, process.env.JWT_SECRET)
       return {
         token
       }
     },
-    deleteUsers: async(parent, {usersIds} , {authUser, User}, info) => {
+    deleteUsers: async(parent, {usersIds} , {authUser, User}) => {
       let count = 0;
       for(count; count < usersIds.length; count++) {
         await User.deleteOne(
@@ -93,7 +158,7 @@ exports.user = {
         count
       };
     },
-    blockUsers: async(parent, {usersIds} , {authUser, User}, info) => {
+    blockUsers: async(parent, {usersIds} , {authUser, User}) => {
       let count = 0;
       for(count; count < usersIds.length; count++) {
         await User.updateOne(
@@ -104,7 +169,7 @@ exports.user = {
         count
       };
     },
-    unBlockUsers: async(parent, {usersIds} , {authUser, User}, info) => {
+    unBlockUsers: async(parent, {usersIds} , {authUser, User}) => {
       let count = 0;
       for(count; count < usersIds.length; count++) {
         await User.updateOne(

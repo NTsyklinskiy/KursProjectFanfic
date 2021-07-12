@@ -8,9 +8,7 @@ import { CREATE_LIKE, DELETE_LIKE, GET_CHAPTER } from '../../utils/graphql'
 export const Likes = ({chapter, user}) => {
     const [CreateLike, {loading: loadingCreate}] = useMutation(CREATE_LIKE)
     const [DeleteLike, {loading: loadingDelete}] = useMutation(DELETE_LIKE)
-    const like = chapter?.likes?.find(like => like.user?.id === user.id)
-    const likesId = chapter?.likes?.filter(like => like.user?.id === user.id)
-    console.log(likesId,like);
+    const like = chapter?.likes?.find(like => like.user?.id === user?.id)
     return (
         <Box 
             style={{
@@ -26,7 +24,7 @@ export const Likes = ({chapter, user}) => {
                 aria-label="library books"
                 aria-controls="menu-appbar"
                 aria-haspopup="true"
-                disabled={loadingCreate}
+                disabled={loadingCreate || !user}
                 onClick={async()=>{
                     await CreateLike({
                         variables:{

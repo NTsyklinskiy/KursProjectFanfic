@@ -7,15 +7,12 @@ import useStyles from '../Styles/useStyles';
 import {CREATE_DELETE_RATING, CREATE_RATING, DELETE_RATING} from '../../utils/graphql'
 
 
-export const Rating = ({artworks,artwork, user, subscribeToMore}) => {
+export const Rating = ({artwork, user, subscribeToMore}) => {
     const classes = useStyles();
     const [stateRating, setStateRating] = useState(false)
     const [rating, setRating] = useState(null)
     const [hover, setHover] = useState(null)
     
-    // const {data,}
-    console.log(artwork.id);
-
     useEffect(()=> {
         const unsubscribe = subscribeToMore({
           document: CREATE_DELETE_RATING,
@@ -25,7 +22,6 @@ export const Rating = ({artworks,artwork, user, subscribeToMore}) => {
             const {operation, artwork} = subscriptionData.data.publishRatings;
             if(operation === 'CREATE_AND_DELETE_RATING'){
                 const newArtworks = prev.getArtworks.map(arg => {
-                    console.log(artwork);
                     return arg.id === artwork.id ? artwork : arg 
                 })
                 return {getArtworks: newArtworks}
@@ -38,11 +34,10 @@ export const Rating = ({artworks,artwork, user, subscribeToMore}) => {
         };
       }, [subscribeToMore])
     
-    
-    const [CreateRating, {loading: createLoading}] = useMutation(CREATE_RATING);
-    const [DeleteRating, {loading: deleteLoading}] = useMutation(DELETE_RATING)
-
-    const ratingUser = artwork.ratings.find(rat => rat?.user.id === user?.id)
+      const [CreateRating, {loading: createLoading}] = useMutation(CREATE_RATING);
+      const [DeleteRating, {loading: deleteLoading}] = useMutation(DELETE_RATING)
+      const ratingUser = artwork.ratings.find(rat => rat?.user?.id === user?.id)
+     
     
     return (
         <>

@@ -24,7 +24,7 @@ const SignIn = ({ history, location, refetch }) => {
 
   const handleSubmitSignIn = async (e) => {
     e.preventDefault();
-
+    const { email, password } = inputs;
     try {
       const response = await signin({
         variables: {  email, password  },
@@ -34,16 +34,16 @@ const SignIn = ({ history, location, refetch }) => {
       await refetch();
       history.push('/');
     } catch (error) {
-      setError(error.graphQLErrors[0].message);
+      setError(error.message);
     }
   };
 
-  const { email, password } = inputs;
 
   return (
     
     <Box>
-    <form align-items="center" onSubmit={handleSubmitSignIn}>
+    <form style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}} onSubmit={handleSubmitSignIn}>
+              {error && <>{error}</>}
         <Grid container spacing={1} alignItems="flex-end">
             <Grid item>
               <AccountCircle />
@@ -53,7 +53,7 @@ const SignIn = ({ history, location, refetch }) => {
                 id="input-with-icon-grid" 
                 type="text" name="email" 
                 value={inputs.email} 
-                label="With a grid" 
+                label="E-mail" 
                 onChange={handleChange}
               />
             </Grid>
@@ -68,7 +68,7 @@ const SignIn = ({ history, location, refetch }) => {
                 type="password" 
                 name="password" 
                 value={inputs.password} 
-                label="With a grid" 
+                label="Password" 
                 onChange={handleChange}
               />
             </Grid>

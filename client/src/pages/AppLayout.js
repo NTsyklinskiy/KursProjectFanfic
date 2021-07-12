@@ -6,17 +6,25 @@ import { SET_AUTH_USER } from '../store/auth';
 import { Toolbars } from '../components/Toolbar/Toolbar';
 import Artworks from '../components/Artwork/Artworks';
 import User from '../components/User/User';
-// import { useLazyQuery, useQuery } from '@apollo/client';
-// import {SEARCH_ARTWORKS, GET_ALL_ARTWORKS} from '../utils/graphql';
+import { GET_ALL_ARTWORKS} from '../utils/graphql';
+import { useQuery } from '@apollo/client';
+import FirstSettings from '../components/Settings/FirstSettings';
 
 
-const AppLayout = ({ location,  authUser, ArtworksPayload}) => {
+const AppLayout = ({ location, errorAuthUser, refetch, authUser}) => {
   const [{ auth }, dispatch] = useStore();
   const [open, setOpen] = useState(false)
 
-  // const [SearchData, search] = useLazyQuery(SEARCH_ARTWORKS);
-  // const home = useQuery(GET_ALL_ARTWORKS);
+  const [searchQuery,setSearchQuery] = useState('');
 
+  const ArtworksPayload = useQuery(GET_ALL_ARTWORKS, {
+    variables: {
+      preference: auth?.user?.preference,
+      searchQuery: searchQuery
+    }
+  });
+  
+  
   useEffect(() => {
     dispatch({ type: SET_AUTH_USER, payload: authUser });
   }, [dispatch, authUser]);
@@ -25,12 +33,17 @@ const AppLayout = ({ location,  authUser, ArtworksPayload}) => {
   if (!auth.user) return null;
   return (
     <>
-    <Toolbars open={open} setOpen={setOpen} user={auth?.user} />
+    <Toolbars open={open} setOpen={setOpen} user={auth?.user} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       <Switch>
         <Route exact path={['/', '/artwork/:id', '/artwork/:id/chapter/:id']} render={() => <Artworks ArtworksPayload={ArtworksPayload} user={auth?.user} open={open} setOpen={setOpen} />} />
         <Route exact path={['/user', '/user/artwork-add', '/user/update/:id/chapter-add',  '/update/:id', '/update/:id/chapter/:id']} render={() => <User user={auth?.user} open={open} setOpen={setOpen} />} />
       </Switch>
+      {
+        auth?.user?.isFirstLogin &&
+        <FirstSettings user={auth?.user} refetch={refetch}/>
+      }
     </>
+    
   );
 };
 

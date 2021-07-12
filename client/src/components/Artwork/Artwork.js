@@ -2,9 +2,11 @@ import { useQuery } from '@apollo/client';
 import React, {useState} from 'react'
 import { GET_ARTWORK } from '../../utils/graphql';
 import { withRouter, Route, Switch, Link } from 'react-router-dom';
-import { Button, Grid, Box,CircularProgress } from '@material-ui/core';
+import { Button, Grid, Box,CircularProgress, Typography } from '@material-ui/core';
 import useStyles from '../Styles/useStyles';
 import Chapter from '../Chapter/Chapter';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCog } from '@fortawesome/free-solid-svg-icons';
 
 const Artwork = ({location, history, user, handleOpen}) => {
     const [chapterClick, setChapterClick] = useState(false);
@@ -12,25 +14,26 @@ const Artwork = ({location, history, user, handleOpen}) => {
     const classes= useStyles();
     const [libraryChapter, setLibraryChapter] = useState(false)
     const artworkId = location.pathname.split('/')[2]
-    console.log(artworkId);
     const {data,error, loading} = useQuery(GET_ARTWORK, {
         variables: {id: artworkId}
     });
-
+    
     const artwork = data?.getArtwork ? data?.getArtwork : null;
+
+
 
     const handlerText = () => {
         setChapterClick(true)
     }
-    // console.log(user);
     
     return (
         <Box className={classes.artwork}>
-            {loading && <CircularProgress color="primary" />}
+            {loading && <CircularProgress style={{position: 'absolute', top: '50%', left: '50%'}}  color="primary" />}
             {artwork && (
                 <>
               <Box className={`${classes.chapter} ${libraryChapter && classes.active}`}>
                     <Button
+                        style={{padding: '10px'}}
                         onClick={()=> {
                         history.push(`/artwork/${artworkId}`)
                         setChapterClick(false)
@@ -56,18 +59,18 @@ const Artwork = ({location, history, user, handleOpen}) => {
                 </Box>
                 <Box className={`${classes.header} ${libraryChapter && classes.libraryActive}`}>
                     { 
-                    user?.id === artwork.author.id && 
+                    (user?.id === artwork?.author?.id || user.role === 'admin') && 
                     <Button
                         component={Link}
-                        to={`/user/update/${artworkId}/chapter-add`}
+                        to={`/update/${artworkId}`}
                     >
-                        Add Chapter
+                        <FontAwesomeIcon icon={faCog} size='2x'/>
                     </Button>
                     }
                     <Button onClick={()=> {
                         setLibraryChapter(!libraryChapter)
                     }}>
-                        Library
+                        Chapters
                     </Button>
                     <Button
                         onClick={handleOpen}
@@ -83,11 +86,34 @@ const Artwork = ({location, history, user, handleOpen}) => {
                 <Box className={`${classes.text} ${libraryChapter && classes.libraryActive}`}>
                 {
                    !chapterClick && (
-                            < >
-                                Discription
-                                {artwork.name}
-                                {artwork.discription}
-                            </>
+                    <Grid container justify="center" direction="column">
+                        <Typography align='justify' >
+                            <span>Author: </span>
+                            {artwork?.author?.name || 'DELETE USER'}
+                        </Typography>
+                        <Typography component='span' align='justify' style={{display: 'flex'}} >
+                            <span>Tags: </span>
+                            {artwork?.tags.map((tag, i) => {
+                                return <p key={i}> #{tag } </p>
+                            })}
+                        </Typography>   
+                        <Typography variant='h3'  align="center">
+                            {artwork.name}
+                        </Typography>
+                        <Typography component='span' align='justify' >
+                            <span>Description: </span>
+                            {artwork.discription}
+                        </Typography>
+                        <Typography align='justify' >
+                            <span>Chpters: </span>
+                            {artwork.chapters.length}
+                        </Typography>
+                        <Typography align='justify' >
+                            <span>Rating Average: </span>
+                            {artwork.ratingsAverage}
+                        </Typography>
+                        
+                    </Grid>
                         )
                 }
                     <Switch>

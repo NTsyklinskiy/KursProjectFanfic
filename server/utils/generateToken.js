@@ -5,4 +5,7 @@ module.exports = (user, secret) => {
     const token = jwt.sign({id,email,role}, secret);
     return token;
   };
+
+exports.createConfirmToken = (token) => {
   
+}

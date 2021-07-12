@@ -1,49 +1,29 @@
 const { GraphQLUpload } = require('graphql-upload');
-const cloudinary = require('cloudinary');
-const shortid = require('shortid');
+const { uploadToCloudinary, deleteFromCloudinary } = require('../utils/cloudinary');
+
+
 const fs = require('fs');
-
-const storeUpload = async ({ stream, filename, imagePublicId }) => {
-  const id = shortid.generate();
-  const options = imagePublicId ? { public_id: imagePublicId, overwrite: true } : { public_id: `chapter/${id}-${filename}` };
-    
-  cloudinary.config({
-    cloud_name: 'llallaha',
-    api_key: '898933834934999',
-    api_secret: 'kjm1Qcl7q796t5mNKAMjD2ZspIs',
-  });
-
-    return new Promise((resolve, reject) => {
-        const streamLoad = cloudinary.v2.uploader.upload_stream({...options, timeout:120000}, (error, result) => {
-          console.log(error, result);
-        if (error) {
-          reject(error);
-        }
-        resolve(result);
-        });
-    
-        stream.pipe(streamLoad);
-    });
-};
-
-const processUpload = async ({stream, filename, mimetype}) => {
-  
-  return new Promise((resolve, reject) => {
-    const id = shortid.generate();
-    const path = `images/${id}-${filename}`;
-    stream
-    .pipe(fs.createWriteStream(path))
-    .on('finish', () => resolve({ id, path, filename, mimetype }))
-    .on('error', reject)
-  }).catch(err => {
-    console.log(err);
-  });
-};
+const storeFS = ({stream, filename }) => {
+  const uploadDir = './public';
+  const path = `${uploadDir}/${filename}`;
+  return new Promise((resolve, reject) =>
+      stream
+          .on('error', error => {
+              if (stream.truncated)
+                  fs.unlinkSync(path);
+              reject(error);
+          })
+          .pipe(fs.createWriteStream(path))
+          .on('error', error => reject(error))
+          .on('finish', () => resolve({ path }))
+  );
+}
 
 
 exports.chapter = {
+    Upload: () => GraphQLUpload,
     Query: {
-      getChapter: async(parent, {id}, {File,Chapter, Artwork}) => {
+      getChapter: async(parent, {id}, {Chapter}) => {
         const chapter = await Chapter.findById(id)
                 .populate([
                   {path: 'artwork'},
@@ -60,7 +40,7 @@ exports.chapter = {
       },
     },
     Mutation: {
-        createChapter: async(parent, {input: {title, text, image, artworkId}}, {File,Chapter, Artwork}) => {
+        createChapter: async(parent, {input: {title, text, artworkId}, file}, {Chapter, Artwork}) => {
           if (!title && !text) {
             throw new Error('Chapter title and text is required.');
           }
@@ -69,19 +49,21 @@ exports.chapter = {
               imagePublicId = '';
                           
               
-              if(image){
-                console.log('this image',image);
-                fs.mkdir('images', { recursive: true }, (err) => {
-                  if (err) throw err;
-                });
-                
-                const { createReadStream, filename, mimetype, encoding } = await image;
-                const stream = createReadStream();
-                const files = await processUpload({ stream, filename, mimetype })
-                // const files = await storeUpload({ stream, filename });
-                console.log(files);
-
+          if(!file){
+            throw new Error('Chapter image is required.');
           }
+          const {
+            file: { filename, mimetype, encoding, createReadStream },
+          } = file;
+          const stream = createReadStream();
+          // const image = await storeFS({stream, filename})
+          const files = await uploadToCloudinary(stream,'chapter')
+          if (!files.secure_url) {
+            throw new Error('Something went wrong while uploading image to Cloudinary');
+          }
+          
+          imageUrl = files.secure_url;
+          imagePublicId = files.public_id;
           
           const newChapter = await new Chapter({
             title,
@@ -94,6 +76,47 @@ exports.chapter = {
         await Artwork.findOneAndUpdate({ _id: artworkId }, { $push: { chapters: newChapter.id } });
         
         return newChapter;
+      },
+      updateChapter: async(paernt, {input: {chapterId,title, text, imagePublicId}}, {Chapter} ) => {
+        console.log(chapterId,title, text, imagePublicId);
+        if (!title || !text ) {
+          throw new Error('Chapter title, text is required.');
+        }
+          
+        const fieldsToUpdate = {title, text};
+        const updatedChapter = await Chapter.findOneAndUpdate({ _id: chapterId }, { ...fieldsToUpdate }, { new: true })
+          .populate('artwork')
+
+        return updatedChapter;
+      },
+      deleteChapter:async (paernt, {input: {chapterId, imagePublicId}}, {Chapter, Comment, Like, User,Artwork})=> {
+        console.log(chapterId, imagePublicId);
+        if (imagePublicId) {
+          const deleteImage = await deleteFromCloudinary(imagePublicId);
+          console.log(deleteImage);
+          if (deleteImage.result !== 'ok') {
+            throw new Error('Something went wrong while deleting image from Cloudinary');
+          }
+        }
+
+        const chapter = await Chapter.findByIdAndRemove(chapterId);
+        await Artwork.findOneAndUpdate({ _id: chapter.artwork }, { $pull: { chapters: chapter.id } });
+        await Like.find({ chapter: chapter.id }).deleteMany();
+        chapter.likes.map(async (likeId) => {
+          await User.where({ likes: likeId }).update({ $pull: { likes: likeId } });
+        });
+
+        await Comment.find({ chapter: chapter.id }).deleteMany();
+        chapter.comments.map(async (commentId) => {
+          await User.where({ comments: commentId }).update({
+            $pull: { comments: commentId },
+          });
+        });
+
+
+        return chapter
+    
       }
     }
 }
+

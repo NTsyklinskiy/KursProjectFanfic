@@ -5,7 +5,7 @@ const { ChapterSchema } = require('./Chapter');
 
 
  const schema = gql`
-    # scalar Upload
+    scalar Upload
  
     type File {
         filename: String!
@@ -110,12 +110,17 @@ const { ChapterSchema } = require('./Chapter');
         artwork: ArtworkPayload
     }
 
+    type ConfirmUser{
+        isConfirm: Boolean
+    }
+
     type Query {
         allUsers: [UserPayload]
         getAuthUser: UserPayload
 
-        searchArtworks(searchQuery: String): [ArtworkPayload]
-        getArtworks: [ArtworkPayload]
+        isConfirmUserMail(token: String): ConfirmUser
+
+        getArtworks(preference: [String], searchQuery: String): [ArtworkPayload]
         getArtwork(id: ID!): ArtworkPayload
         getTags: Tag
 
@@ -128,20 +133,26 @@ const { ChapterSchema } = require('./Chapter');
 
     type Mutation {
         signin(email: String!, password: String!): AuthData!
-        signup(userInput: UserInputData): AuthData!
+        signup(userInput: UserInputData!): AuthMessageConfirm!
+        firstLogin(preference: [String]!): AuthMessageConfirm!
+        updatePrefence(preference: [String]!): UserPayload!
         deleteUsers(usersIds: [ID!]!): BatchPayload!
         blockUsers(usersIds: [ID!]!): BatchPayload!
         unBlockUsers(usersIds: [ID!]!): BatchPayload!
 
+        updateArtwork(input: UpdateArtworkInput!): ArtworkPayload
         createArtwork(input: CreateArtworkInput!): ArtworkPayload
-        deleteArtwork(input: DeleteArtworkInput!): ArtworkPayload
+        deleteArtwork(artworkId: ID!): ArtworkPayload
+
         artworkPublic(artworkId: ID!): ArtworkPayload
         
         createRating(input: CreateRatingInput!): RatingPayload
         deleteRating(ratingId: ID!): RatingPayload
         
 
-        createChapter(input: CreateChapterInput!): ChapterPayload
+        createChapter(input: CreateChapterInput! file: Upload! ): ChapterPayload
+        updateChapter(input: UpdateChapterInput!): ChapterPayload
+        deleteChapter(input: DeleteChapterInput!): ChapterPayload
 
         createComment(input: CreateCommentInput!): CommentPayload
         deleteComment(commentId: ID!): CommentPayload

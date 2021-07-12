@@ -26,12 +26,16 @@ type Artwork {
         authorId: ID!
     }
 
-    input DeleteArtworkInput {
-        id: ID!
+    input UpdateArtworkInput{
+        name: String
+        discription: String
+        fandom: String
+        tags: [String]!
+        artworkId: ID!
     }
 
-    type UserArtworksPayload {
-        artworks: [ArtworkPayload]!
+    input DeleteArtworkInput {
+        id: ID!
     }
 
     type ArtworkPayload {
@@ -39,7 +43,7 @@ type Artwork {
         name: String
         discription: String
         fandom: String
-        tags: [String]!
+        tags: [String]
         author: UserPayload
         chapters: [ChapterPayload]
         ratings: [RatingPayload]

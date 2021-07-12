@@ -14,7 +14,7 @@ const SignUp = ({ history, refetch }) => {
       password: ''
     })
 
-  const [signup, { loading }] = useMutation(SIGN_UP);
+  const [signup, { data,loading }] = useMutation(SIGN_UP);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,38 +24,32 @@ const SignUp = ({ history, refetch }) => {
         variables:  {
           userInput: inputs,
       },    
-      refetchQueries: [{query: GET_ALL_USERS}]
       });
-      localStorage.setItem('token', response.data.signup.token);
-      await refetch();
-      history.push('/');
     } catch (error) {
-      setError(error.graphQLErrors[0].message);
+      setError(error.message);
     }
   };
 
-
   return (
-    <>
-            <Form onSubmit={handleSubmit}>
-              <Form.Group>
-              <Form.Label>E-Mail</Form.Label>
-                <Form.Control name="email" type="text" value={inputs.email} placeholder="email" onChange={handleChange} />
-              </Form.Group>
-              <Form.Group>
-              <Form.Label>Name</Form.Label>
-                <Form.Control name="name" type="text" value={inputs.name} placeholder="name" onChange={handleChange} />
-              </Form.Group>
-              <Form.Group controlId="formBasicPassword">
-                <Form.Label>Password</Form.Label>
-                <Form.Control type="password" name="password" value={inputs.password} placeholder="Пароль" onChange={handleChange}/>
-              </Form.Group>
-              <Button variant="primary" type="submit">
-                Sign Up
-              </Button>
-            </Form>
-        
-    </>
+    data?.signup?.message ? <h3>{data?.signup?.message}</h3> :
+      (<Form onSubmit={handleSubmit}>
+        {error && <>{error}</>}
+        <Form.Group>
+        <Form.Label>E-Mail</Form.Label>
+        <Form.Control name="email" type="text" value={inputs.email} placeholder="email" onChange={handleChange} />
+        </Form.Group>
+        <Form.Group>
+        <Form.Label>Name</Form.Label>
+        <Form.Control name="name" type="text" value={inputs.name} placeholder="name" onChange={handleChange} />
+        </Form.Group>
+        <Form.Group controlId="formBasicPassword">
+        <Form.Label>Password</Form.Label>
+        <Form.Control type="password" name="password" value={inputs.password} placeholder="Пароль" onChange={handleChange}/>
+        </Form.Group>
+        <Button variant="primary" type="submit">
+        Sign Up
+        </Button>
+      </Form>)
   );
 };
 

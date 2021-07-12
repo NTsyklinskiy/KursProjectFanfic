@@ -6,7 +6,6 @@ type User {
       name: String
       email: String
       password: String
-      passwordConfirm: String
       role: String
       isOnline: Boolean
       lastLoginAt: String
@@ -15,18 +14,16 @@ type User {
       likes: [Like]
       comments: [Comment]
       artworks:[Artwork]
-      preference: Preference
+      preference: [String]
+      isFirstLogin: Boolean
+      isMailConfirm: Boolean
     }
-
-
-
 
     type UserPayload {
       id: ID!
       name: String
       email: String
       password: String
-      passwordConfirm: String
       role: String
       isOnline: Boolean
       lastLoginAt: String
@@ -36,12 +33,11 @@ type User {
       ratings: [RatingPayload]
       comments: [CommentPayload]
       artworks:[ArtworkPayload]
-      preferences: Preference
+      preference: [String]
+      isMailConfirm: Boolean
+      isFirstLogin: Boolean
     }
 
-    type LogOutData {
-        boolean: Boolean!
-    }
 
     type BatchPayload {
         count: Int!
@@ -49,12 +45,16 @@ type User {
 
     input UserInputData {
         email: String!
-        name: String
+        name: String!
         password: String!
     }
     
     type AuthData {
         token: String!
+    }
+
+    type AuthMessageConfirm{
+        message: String!
     }
 
     type IsUserOnlinePayload {

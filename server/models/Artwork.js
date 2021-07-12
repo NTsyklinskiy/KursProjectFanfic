@@ -3,12 +3,22 @@ const Schema = mongoose.Schema;
 
 const artworkSchema = new Schema(
   {
-    name: String,
-    discription: String,
-    fandom: String,
+    name: {
+      type:String,
+      text: true
+    },
+    discription:{
+      type:String,
+      text: true
+    },
+    fandom:{
+      type:String,
+      text: true
+    },
     tags: [
       {
-        type: String
+        type:String,
+        text: true
       }
       
     ],
@@ -53,7 +63,7 @@ const artworkSchema = new Schema(
   }
 );
 
-artworkSchema.index({ '$**': 'text' });
+// artworkSchema.index({ $name: 'text', $discription: 'text', $fandom: 'text', $tags: 'text' });
 artworkSchema.index({  ratingsAverage: 1 });
 
   

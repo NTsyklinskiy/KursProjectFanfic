@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from 'react'
-
+import React from 'react'
 import { Button, ButtonGroup, Container, Row, Table  } from 'react-bootstrap';
 import { useMutation } from '@apollo/client';
-import { BLOCK_USERS, DELETE_USERS, UNBLOCK_USERS } from '../utils/graphql';
-import useCheckbox from '../hooks/useCheckbox';
+import { BLOCK_USERS, DELETE_USERS, UNBLOCK_USERS } from '../../utils/graphql';
+import useCheckbox from '../../hooks/useCheckbox';
 import { Checkbox } from './Checkbox';
-import { useStore } from '../store/store';
 
 function conversionDate(data) {
   let date = new Date(+data);
@@ -19,11 +17,8 @@ function keyId(checkeds){
   })));
 }
 
-export const TableUsers = ({data, refetchUser,refetchAllUsers}) => {
-    const [{ auth: {user: {id}} }] = useStore();
-    console.log(id);
-    const [users, setUsers] = useState([])
-
+export const TableUsers = ({user, users}) => {
+  
     const {checkeds, handleChange, handleChangeAll, handleChangeNo} = useCheckbox(users)
 
     const[deleteUsers,{ loading: loadingDelete, error: errorDelete}] = useMutation(DELETE_USERS)
@@ -39,10 +34,9 @@ export const TableUsers = ({data, refetchUser,refetchAllUsers}) => {
             usersIds:blockId,
         },    
         })
-        await refetchUser()
-        await refetchAllUsers()
+     
       }catch(e) {
-        console.log(e);
+        console.error(e);
       }
     } 
 
@@ -55,17 +49,16 @@ export const TableUsers = ({data, refetchUser,refetchAllUsers}) => {
             usersIds:unBlockId,
         },    
         })
-        await refetchUser()
-        await refetchAllUsers()
+        
       }catch(e) {
-        console.log(e);
+        console.error(e);
       }
     }
 
     const handlerDelete = async () => {
       try {
         const deleteId = keyId(checkeds)
-        if(deleteId.some(e=> e === id)){
+        if(deleteId.some(e=> e === user?.id)){
           window.localStorage.removeItem('token')
         }
 
@@ -75,35 +68,20 @@ export const TableUsers = ({data, refetchUser,refetchAllUsers}) => {
             usersIds:deleteId,
         },    
         })
-        await refetchUser()
-        await refetchAllUsers()
+       
       }catch(e) {
         console.log(e);
       }
     }    
-    
-    const handlerRefetch = async () => {
-      try{
-        await refetchAllUsers()
-        await refetchUser()
-      }catch(e){
-        console.log(e);
-      }
-    }
-    useEffect(async() => {
-        setUsers(data)
-        await refetchAllUsers()
-    }, [data])
-  
+
 
     return (
-      <Container>
+      <>
       <Row className="justify-content-center">
         <ButtonGroup>
           <Button onClick={handlerBlock}>Block</Button>
           <Button onClick={handlerUnBlock}>UnBlock</Button>
           <Button variant="danger" onClick={handlerDelete}>Delete</Button>
-          <Button variant="success" onClick={handlerRefetch}>UpdateUsers</Button>
         </ButtonGroup>
       </Row>
       
@@ -124,6 +102,7 @@ export const TableUsers = ({data, refetchUser,refetchAllUsers}) => {
                 <th>Id</th>
                 <th>Name</th>
                 <th>Email</th>
+                <th>Role</th>
                 <th>Date</th>
                 <th>Last Login</th>
                 <th>Online Offline</th>
@@ -131,7 +110,7 @@ export const TableUsers = ({data, refetchUser,refetchAllUsers}) => {
               </tr>
             </thead>
             <tbody>
-            {users.map((u, i)=> {
+            {users && users?.map((u, i)=> {
             return (
                 <tr key={u.id}>
                   <td>
@@ -140,6 +119,7 @@ export const TableUsers = ({data, refetchUser,refetchAllUsers}) => {
                   <td>{u.id}</td>
                   <td>{u.name}</td>
                   <td>{u.email}</td>
+                  <td>{u.role}</td>
                   <td>{conversionDate(u.createdAt)}</td>
                   <td>{conversionDate(u.lastLoginAt)}</td>
                   <td>{u.isOnline === true ? 'Online' : 'Offline'}</td>
@@ -150,7 +130,7 @@ export const TableUsers = ({data, refetchUser,refetchAllUsers}) => {
             }
         </tbody>
         </Table>
-        </Container>
+        </>
     )
 }
 
